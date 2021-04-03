@@ -2,22 +2,11 @@
 
 from chessdotcom import get_player_game_archives
 import requests
-import pprint
 import re
-
-
-#Setting up PrettyPrinter
-
-PPrint = pprint.PrettyPrinter()
-
-
-print()
 
 ##########################
 #####<--Code Below-->#####
 ##########################
-
-print()
 
 
 def get_player_moves(username, color, NumOfMonths = 1, NumOfGames = 20):
@@ -40,22 +29,26 @@ def get_player_moves(username, color, NumOfMonths = 1, NumOfGames = 20):
     global playerGames
     playerGames = requests.get(url).json()
 
+    #Adding games from previous 2-3 months to the ['games'] Value list if NumOfMonths > 1
     if NumOfMonths > 1:
         Add_To_Games(NumOfMonths, username)
     else:
         pass
 
+    #Setting playerGames['games'][-NumOfGames:] to a variable to make the code look cleaner
     RangedNumOfGames = playerGames['games'][-NumOfGames:]
 
+    #print() to seperate the output from the terminal header
     print()
 
+    #Loop throught each game in ['games']
     for i in range(NumOfGames):
         try:
             try:
+                #Makes sure that the games analyzed are either RAPID or BLITZ
                 if (RangedNumOfGames[i]['time_class'] == 'rapid') or (RangedNumOfGames[i]['time_class'] == 'blitz'):
-                    
-                    
 
+                    #Filters the list of games to only analyze games in which opponent is BLACK
                     if color == 'BLACK':
                         
                         if RangedNumOfGames[i]['black']['username'].upper() == username:
@@ -68,7 +61,7 @@ def get_player_moves(username, color, NumOfMonths = 1, NumOfGames = 20):
                 
                             pgnList = RangedNumOfGames[i]['pgn'].split('\n')
                 
-                            #stripping {[%clk 0:09:55.3] from the moves
+                            #stripping {[%clk 0:09:55.3]} from the moves
                             stripped = re.sub(r"\{\[.*?\}", "", pgnList[-2]).split("  ")
 
                             if (RangedNumOfGames[i]['black']['result'] == 'win'):
@@ -96,10 +89,10 @@ def get_player_moves(username, color, NumOfMonths = 1, NumOfGames = 20):
 
                         else:
                             pass
-                
-        
                     
+                    #Filters the list of games to only analyze games in which opponent is BLACK
                     elif color == 'WHITE':
+                                      
                         if RangedNumOfGames[i]['black']['username'].upper() != username:
                             
                             GameNum += 1
@@ -110,7 +103,7 @@ def get_player_moves(username, color, NumOfMonths = 1, NumOfGames = 20):
                 
                             pgnList = RangedNumOfGames[i]['pgn'].split('\n')
                 
-                            #stripping {[%clk 0:09:55.3] from the moves
+                            #stripping {[%clk 0:09:55.3]} from the moves
                             stripped = re.sub(r"\{\[.*?\}", "", pgnList[-2]).split("  ")
 
                             FirstMove = stripped[0]
@@ -150,24 +143,27 @@ def get_player_moves(username, color, NumOfMonths = 1, NumOfGames = 20):
                     continue
 
             except IndexError:
-                print(f"ERRRRROOOOOORRRRR: Game {i} has no moves or is [BULLET]")
+                print(f"\nERRRRROOOOOORRRRR: Game {i} has no moves or is [BULLET]\n")
                 continue
     
         except IndexError:
             print(f"\nOpponent has only played {i} games this month")
             break
 
-    
+    #Separator
     print("\n","-"*60, sep="")
+                                      
+    #Prints the total number of games opponent played as the specified color (Black/White)
     if color == "BLACK":
         print(f"Games as Black in the past {NumOfGames} games: {BlackGames}\n")
     elif color == "WHITE":
         print(f"Games as White in the past {NumOfGames} games: {WhiteGames}\n")
     
+    #Function returns the total games won, lost, and drawn for the opponent when playing as specificed color
     return print(f"Games Won: {GWon}\nGames Lost: {GLost}\nGames Drawn: {GDrawn}\n")
 
 
-
+#Function to add games from the previous 2-3 months to the ['games'] Value list
 def Add_To_Games(NumOfMonths, username):
     data = get_player_game_archives(username).json
 
@@ -192,12 +188,13 @@ def Add_To_Games(NumOfMonths, username):
     return
 
 
-
+#Taking the users input
 User = input('Enter the username of your opponent: ').upper()
 Color = input('Enter the color your opponent is playing with: ').upper()
 NumOfMonths = input('You want to analyze the games for the past how many calendar months? Range (1-3 months) (default: 1) ')
 NumOfGames = input('Enter the number of games you would like to analyze (default: 20): ')
 
+#I think that's inefficient and I'm pretty sure there is a better way to do it, but this piece of code avoids errors when user leaves input as blank
 if (type(NumOfGames) == type("")) and (NumOfGames != "") and (type(NumOfMonths) == type("")) and (NumOfMonths != ""):
     get_player_moves(User, Color, int(NumOfMonths), int(NumOfGames))
 elif (type(NumOfGames) == type("")) and (NumOfGames != "") and (NumOfMonths == ""):
@@ -206,3 +203,4 @@ elif (type(NumOfMonths) == type("")) and (NumOfMonths != "") and (NumOfGames == 
     get_player_moves(User, Color, int(NumOfMonths))
 else:
     get_player_moves(User, Color)
+                                      
